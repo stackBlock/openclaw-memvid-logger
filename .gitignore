@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs (during testing)
+*.log
+conversation_log.jsonl
+
+# Memory files (user-specific)
+*.mv2
+*.mv2e
+
+# Temp files
+tmp/
+temp/
+*.tmp
