@@ -1,4 +1,4 @@
-# Unified Logger for OpenClaw
+# Memvid Unified Logger for OpenClaw
 
 [![OpenClaw](https://img.shields.io/badge/OpenClaw->=2026.2.12-blue)](https://openclaw.ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
