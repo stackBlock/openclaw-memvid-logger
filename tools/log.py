@@ -8,7 +8,7 @@ Uses monthly rotation files to stay under free tier limits.
 
 Features:
 - Dual-output logging (JSONL + Memvid)
-- Monthly rotation: anthony_memory_YYYY-MM.mv2
+- Monthly rotation: memory_YYYY-MM.mv2
 - Role tagging: user, assistant, agent:*, system, tool
 - Captures everything: messages, tool calls, agent spawns, background tasks
 
@@ -27,24 +27,37 @@ from datetime import datetime as dt, timezone
 from typing import Dict, Optional
 
 # Configuration paths - override with environment variables
+# Default paths use user's home directory for portability
+HOME_DIR = os.path.expanduser("~")
+DEFAULT_WORKSPACE = os.path.join(HOME_DIR, ".openclaw", "workspace")
+
 LOG_PATH = os.environ.get("JSONL_LOG_PATH", 
-                          "/home/anthony/.openclaw/workspace/conversation_log.jsonl")
+                          os.path.join(DEFAULT_WORKSPACE, "conversation_log.jsonl"))
 
 # Monthly rotation for Memvid files (stays under 50MB free tier per file)
-# Format: anthony_memory_2026-02.mv2, anthony_memory_2026-03.mv2, etc.
-MEMVID_BASE = os.environ.get("MEMVID_PATH", "/home/anthony/.openclaw/workspace/anthony_memory.mv2")
-MEMORY_DIR = os.path.dirname(MEMVID_BASE) or "/home/anthony/.openclaw/workspace"
+# Format: memory_YYYY-MM.mv2 (generic, not user-specific)
+MEMVID_BASE = os.environ.get("MEMVID_PATH", 
+                             os.path.join(DEFAULT_WORKSPACE, "memory.mv2"))
+MEMORY_DIR = os.path.dirname(MEMVID_BASE) or DEFAULT_WORKSPACE
 
 # Check for mode: 'single' (one file) or 'monthly' (rotating)
 MEMVID_MODE = os.environ.get("MEMVID_MODE", "monthly")  # 'single' for API mode, 'monthly' for free/sharding
 
 if MEMVID_MODE == "monthly":
     current_month = dt.now().strftime("%Y-%m")
-    MEMVID_PATH = os.path.join(MEMORY_DIR, f"anthony_memory_{current_month}.mv2")
+    MEMVID_PATH = os.path.join(MEMORY_DIR, f"memory_{current_month}.mv2")
 else:
     MEMVID_PATH = MEMVID_BASE
 
-MEMVID_BIN = os.environ.get("MEMVID_BIN", "/home/anthony/.npm-global/bin/memvid")
+# Try to find memvid in PATH, fallback to common npm global locations
+_MEMVID_PATHS = [
+    "/usr/local/bin/memvid",
+    "/usr/bin/memvid",
+    os.path.expanduser("~/.npm-global/bin/memvid"),
+    os.path.expanduser("~/.local/bin/memvid"),
+]
+_DEFAULT_MEMVID = next((p for p in _MEMVID_PATHS if os.path.exists(p)), "memvid")
+MEMVID_BIN = os.environ.get("MEMVID_BIN", _DEFAULT_MEMVID)
 
 
 def ensure_memory_file():
