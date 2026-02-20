@@ -39,13 +39,13 @@ echo "✓ Python 3 found"
 if ! command -v memvid &> /dev/null; then
     echo ""
     echo "⚠️  Memvid CLI not found."
-    echo "   This requires: npm install -g @memvid/cli"
+    echo "   This requires: npm install -g memvid"
     read -p "Install Memvid CLI now? (requires sudo for global install) (y/N) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        npm install -g @memvid/cli || {
+        npm install -g memvid || {
             echo "❌ Failed to install Memvid CLI. Install manually:"
-            echo "   npm install -g @memvid/cli"
+            echo "   npm install -g memvid"
             exit 1
         }
         echo "✓ Memvid CLI installed"

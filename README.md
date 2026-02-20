@@ -49,7 +49,7 @@ This skill captures **everything** - by design. It logs all user messages, assis
 
 ```bash
 # Install
-npm install -g @memvid/cli
+npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
 
@@ -85,7 +85,7 @@ memvid when anthony_memory.mv2 "last Tuesday"
 
 ```bash
 # Install
-npm install -g @memvid/cli
+npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
 export MEMVID_MODE="single"
@@ -110,7 +110,7 @@ memvid create ~/anthony_memory.mv2
 
 ```bash
 # Install
-npm install -g @memvid/cli
+npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
 export MEMVID_MODE="monthly"  # Default
@@ -305,7 +305,7 @@ export MEMVID_API_KEY="your_key"  # $59-299/month at memvid.com
 
 **"memvid: command not found"**
 ```bash
-npm install -g @memvid/cli
+npm install -g memvid
 ```
 
 ---

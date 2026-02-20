@@ -31,7 +31,7 @@
     "python": ">=3.8"
   },
   "peerDependencies": {
-    "@memvid/cli": ">=2.0.0"
+    "memvid": ">=2.0.0"
   },
   "openclaw": {
     "type": "skill",

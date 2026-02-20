@@ -24,7 +24,7 @@ jobs:
         node-version: '20'
     
     - name: Install Memvid CLI
-      run: npm install -g @memvid/cli
+      run: npm install -g memvid
     
     - name: Check Python syntax
       run: |

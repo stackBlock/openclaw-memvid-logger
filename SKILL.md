@@ -68,7 +68,7 @@ export MEMVID_API_KEY="your_api_key_here"
 export MEMVID_MODE="single"
 
 # 2. Install
-npm install -g @memvid/cli
+npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
 
@@ -93,7 +93,7 @@ memvid ask memory.mv2 "Show me all the Python scripts I asked for"
 
 ```bash
 # 1. Install (no API key needed)
-npm install -g @memvid/cli
+npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
 export MEMVID_MODE="single"
@@ -118,7 +118,7 @@ memvid create ~/memory.mv2
 
 ```bash
 # 1. Install (no API key needed)
-npm install -g @memvid/cli
+npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
 export MEMVID_MODE="monthly"  # This is the default
