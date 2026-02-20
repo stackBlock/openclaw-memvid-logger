@@ -10,6 +10,29 @@
 
 A dual-output conversation logger for [OpenClaw](https://openclaw.ai) that captures **everything** - user messages, assistant responses, sub-agent conversations, tool executions, and system events - to both JSONL (backup) and Memvid (semantic search) formats.
 
+## ⚠️ Security & Privacy Notice
+
+**Before installing, please understand:**
+
+This skill captures **everything** - by design. It logs all user messages, assistant responses, sub-agent conversations, tool outputs, and system events to local files. This enables powerful long-term memory but requires trust.
+
+**What you should know:**
+- **Broad capture scope:** This is intentional - the skill's purpose is complete conversation logging
+- **Sensitive data risk:** Tool outputs (commands, API responses, file contents) are logged. Review what tools expose.
+- **Continuous logging:** Once installed, it runs automatically on every assistant response until removed
+- **Optional cloud mode:** API mode with `MEMVID_API_KEY` sends data to memvid.com (third-party service). Free/local modes keep data on your machine only.
+- **Your responsibility:** Secure the JSONL/.mv2 files, rotate logs regularly, and audit what gets captured.
+
+**Mitigations available:**
+- Use **Free/Sharding mode** to keep data local (no API key needed)
+- Change default paths to encrypted locations
+- Review `tools/log.py` before installing to understand exactly what gets logged
+- File permissions: restrict access to log files (`chmod 600`)
+
+**This skill is for users who want complete conversation memory and accept the privacy trade-offs.**
+
+---
+
 ## ✨ What Makes This Different
 
 - **📝 Dual Storage** - Every message saved to JSONL + Memvid simultaneously
