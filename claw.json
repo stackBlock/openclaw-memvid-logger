@@ -8,7 +8,6 @@
   "tags": ["memvid", "conversation", "memory", "logging", "semantic-search", "long-term-memory"],
   "homepage": "https://github.com/stackBlock/openclaw-memvid-logger",
   "repository": "https://github.com/stackBlock/openclaw-memvid-logger",
-  "readme": "./README-clawhub.md",
   "entry": "tools/log.py",
   "requirements": {
     "python": ">=3.8",
