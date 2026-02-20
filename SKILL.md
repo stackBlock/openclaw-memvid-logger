@@ -1,151 +1,234 @@
-# Unified Conversation Logger
+# Unified Conversation Logger v1.2.0
 
-**Version:** 1.0.0  
+**Version:** 1.2.0 (Full Context Edition)  
 **Author:** AnToni  
 **License:** MIT  
 **OpenClaw:** >= 2026.2.12
 
-A dual-output conversation logger for OpenClaw that captures every message to both JSONL (backup) and Memvid (semantic search) formats.
+A dual-output conversation logger for OpenClaw that captures **everything** - user messages, assistant responses, sub-agent conversations, tool calls, and system events - to both JSONL (backup) and Memvid (semantic search) formats.
 
-## Overview
+## What's New in v1.2.0
 
-This skill hooks into OpenClaw's message flow and preserves every conversation turn with:
-- **Zero data loss** - Raw text only, no summarization
-- **Dual storage** - JSONL for grep/jq, Memvid for semantic search
-- **Instant searchability** - Every message indexed as it's spoken
-- **Crash resilience** - Append-only writes, survives `/new` and restarts
+- **Role Tagging:** Distinguishes user, assistant, agent:*, system, and tool messages
+- **Full Context:** Captures sub-agent chatter, tool results, background processes
+- **Three Storage Modes:** API mode (single file), Free mode (50MB), Sharding mode (monthly rotation)
+- **Semantic Search:** Ask "What did the researcher agent find?" or "What did I say about X?"
 
-## Installation
+## Quick Install (Choose Your Mode)
 
-### 1. Install Memvid CLI
+### Option 1: API Mode (Recommended) - Near Limitless Memory
+Best for: Heavy users, long-term archives, unified search across everything
 
 ```bash
+# 1. Get API key from memvid.com ($20/month for 1GB, $59 for 25GB)
+export MEMVID_API_KEY="your_api_key_here"
+export MEMVID_MODE="single"
+
+# 2. Install
 npm install -g @memvid/cli
-```
-
-### 2. Install Skill
-
-```bash
-# Clone or copy to OpenClaw skills directory
 cp -r unified-logger ~/.openclaw/workspace/skills/
 
-# Or use clawhub (when published)
-clawhub install unified-logger
+# 3. Create unified memory file
+memvid create anthony_memory.mv2
+
+# 4. Start OpenClaw - everything logs to one searchable file
 ```
 
-### 3. Configure (Optional)
-
-Set environment variables or accept defaults:
-
-```bash
-export JSONL_LOG_PATH="/home/anthony/.openclaw/workspace/conversation_log.jsonl"
-export MEMVID_PATH="/home/anthony/.openclaw/workspace/anthony_memory.mv2"
-export MEMVID_BIN="/home/anthony/.npm-global/bin/memvid"
-```
-
-### 4. Initialize Memory File
-
-```bash
-memvid create $MEMVID_PATH
-```
-
-## Architecture
-
-```
-┌─────────────────┐
-│  OpenClaw Chat  │
-└────────┬────────┘
-         │
-    ┌────▼────┐
-    │ log.py  │
-    └────┬────┘
-         │
-    ┌────┴────┐
-    ↓         ↓
-┌───────┐  ┌─────────┐
-│ JSONL │  │ Memvid  │
-│ Backup│  │ Search  │
-└───────┘  └─────────┘
-    │          │
-    ↓          ↓
- grep/jq   memvid ask
-```
-
-## Usage
-
-### Search Your Conversations
-
-**Semantic search (natural language):**
+**Search everything at once:**
 ```bash
 memvid ask anthony_memory.mv2 "What did we discuss about BadjAI?"
+memvid ask anthony_memory.mv2 "What did the researcher agent find about Tesla?"
+memvid ask anthony_memory.mv2 "Show me all the Python scripts I asked for"
 ```
 
-**Keyword search:**
+---
+
+### Option 2: Free Mode (50MB Limit) - Complete Memory in One Place
+Best for: Testing, light usage, single searchable file
+
 ```bash
-memvid find anthony_memory.mv2 --query "Mercedes car decision"
+# 1. Install (no API key needed)
+npm install -g @memvid/cli
+cp -r unified-logger ~/.openclaw/workspace/skills/
+export MEMVID_MODE="single"
+
+# 2. Create memory file
+memvid create anthony_memory.mv2
+
+# 3. Start OpenClaw
 ```
 
-**Temporal queries:**
-```bash
-memvid when anthony_memory.mv2 "yesterday"
-memvid when anthony_memory.mv2 "last Tuesday"
-```
+**Limitations:**
+- 50MB max (~5,000 conversation turns)
+- When you hit limit, you'll need to archive or upgrade
+- All searches from one file
 
-**JSONL grep (backup):**
-```bash
-grep "Mercedes" conversation_log.jsonl
-jq 'select(.role == "user")' conversation_log.jsonl
-```
-
-### Memory Maintenance
-
-**Check status:**
+**Check usage:**
 ```bash
 memvid stats anthony_memory.mv2
 ```
 
-**Expand capacity (self-hosted):**
+---
+
+### Option 3: Sharding Mode - More Than 50MB, Free Forever
+Best for: Long-term use, staying under free tier, don't mind multi-file search
+
 ```bash
-memvid tickets issue anthony_memory.mv2 \
-    --issuer self-hosted \
-    --seq 2 \
-    --capacity 1073741824  # 1GB
+# 1. Install (no API key needed)
+npm install -g @memvid/cli
+cp -r unified-logger ~/.openclaw/workspace/skills/
+export MEMVID_MODE="monthly"  # This is the default
+
+# 2. Start OpenClaw - creates anthony_memory_2026-02.mv2, then 2026-03.mv2, etc.
 ```
 
-**Vacuum and rebuild indexes:**
+**How it works:**
+- New file created each month: `anthony_memory_2026-02.mv2`, `anthony_memory_2026-03.mv2`
+- Each file stays under 50MB limit
+- Old files remain searchable
+- Free forever
+
+**Search across files:**
 ```bash
-memvid doctor anthony_memory.mv2 --vacuum
+# Search current month
+memvid ask anthony_memory_2026-02.mv2 "recent discussions"
+
+# Search specific month
+memvid ask anthony_memory_2026-01.mv2 "what I said in January"
+
+# Search all months (bash wrapper)
+for f in anthony_memory_*.mv2; do
+    echo "=== $f ==="
+    memvid ask "$f" "your query" 2>/dev/null | head -10
+done
 ```
 
-## Log Format
+**Drawbacks:**
+- Can't search across months in one query
+- Need to know which month to search
+- No unified "search everything" view
 
-### JSONL Entry
+---
 
-```jsonl
-{
-  "timestamp": "2026-02-19T18:30:00Z",
-  "session_id": "abc123",
-  "role": "user",
-  "content": "What about the Mercedes?",
-  "tool_calls": null,
-  "source": "openclaw_conversation",
-  "logged_at": "2026-02-19T18:30:01Z"
-}
+## What Gets Logged
+
+### Role Tags (Automatic)
+
+| Role | Tag | Example Search |
+|------|-----|----------------|
+| **User** | `[user]` | "What did **I** say about Mercedes?" |
+| **Assistant** | `[assistant]` | "What did **you** recommend?" |
+| **Sub-agents** | `[agent:researcher]`, `[agent:coder]` | "What did the **researcher** find?" |
+| **System** | `[system]` | "When did the **cron job** run?" |
+| **Tools** | `[tool:exec]`, `[tool:browser]` | "What **commands** were run?" |
+
+### Everything Captured
+
+- ✅ User messages (what you type)
+- ✅ Assistant responses (what I say back)
+- ✅ Sub-agent conversations (researcher, coder, vision, math, etc.)
+- ✅ Tool executions (bash commands, browser actions, file edits)
+- ✅ Background processes (cron jobs, heartbeats, scheduled tasks)
+- ✅ System events (config changes, restarts, errors)
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────┐
+│           OpenClaw Ecosystem            │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐ │
+│  │  User   │  │Assistant│  │  Agents │ │
+│  │ Messages│  │Responses│  │Research │ │
+│  └────┬────┘  └────┬────┘  └────┬────┘ │
+│       └─────────────┴─────────────┘     │
+│                     │                   │
+│              ┌──────▼──────┐            │
+│              │  log.py     │            │
+│              │  (this skill)│           │
+│              └──────┬──────┘            │
+└─────────────────────┼───────────────────┘
+                      │
+    ┌─────────────────┼─────────────────┐
+    ↓                 ↓                 ↓
+┌───────┐      ┌─────────────┐    ┌──────────┐
+│ JSONL │      │   Memvid    │    │  Search  │
+│ File  │      │   Files     │    │  Query   │
+└───────┘      └─────────────┘    └──────────┘
+    │                 │
+    ↓                 ↓
+ grep/jq       memvid ask/find
 ```
 
-### Memvid Frame
+---
 
-Each turn becomes a searchable frame with:
-- **Title:** `[user] What about the Mercedes?...`
-- **Timestamp:** Date extracted from message
-- **Content:** Full JSON of the log entry
-- **Tags:** Auto-extracted from content
+## Usage Examples
+
+### Natural Language Search
+
+```bash
+# What did you say about...?
+memvid ask anthony_memory_2026-02.mv2 "What was your recommendation about the Mercedes vs Tesla?"
+
+# What did I ask for...?
+memvid ask anthony_memory_2026-02.mv2 "What Python scripts did I request last week?"
+
+# What did agents do...?
+memvid ask anthony_memory_2026-02.mv2 "What did the researcher agent find about options trading?"
+
+# System events...?
+memvid ask anthony_memory_2026-02.mv2 "When did the PowerSchool grades cron job run?"
+```
+
+### Keyword Search
+
+```bash
+# Find specific terms
+memvid find anthony_memory_2026-02.mv2 --query "Mercedes"
+
+# With filters
+memvid find anthony_memory_2026-02.mv2 --query "script" --tag agent:coder
+```
+
+### Temporal Queries
+
+```bash
+memvid when anthony_memory_2026-02.mv2 "yesterday"
+memvid when anthony_memory_2026-02.mv2 "last Tuesday"
+memvid when anthony_memory_2026-02.mv2 "3 days ago"
+```
+
+### JSONL Backup
+
+```bash
+# Quick grep
+grep "Mercedes" conversation_log.jsonl
+
+# Complex queries with jq
+jq 'select(.role_tag == "user" and .content | contains("Python"))' conversation_log.jsonl
+
+# Time range
+jq 'select(.timestamp >= "2026-02-01" and .timestamp < "2026-03-01")' conversation_log.jsonl
+```
+
+---
 
 ## Configuration
 
+### Environment Variables
+
+| Variable | Default | Mode | Description |
+|----------|---------|------|-------------|
+| `MEMVID_API_KEY` | (none) | API | Your memvid.com API key |
+| `MEMVID_MODE` | `monthly` | All | `single` or `monthly` |
+| `JSONL_LOG_PATH` | `~/conversation_log.jsonl` | All | Backup JSONL file |
+| `MEMVID_PATH` | `~/anthony_memory.mv2` | All | Base path for memory files |
+| `MEMVID_BIN` | `~/.npm-global/bin/memvid` | All | Path to memvid CLI |
+
 ### OpenClaw Hooks (Advanced)
 
-To enable via `openclaw.json`:
+Add to `openclaw.json`:
 
 ```json
 {
@@ -163,70 +246,85 @@ To enable via `openclaw.json`:
 }
 ```
 
-### Environment Variables
+---
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `JSONL_LOG_PATH` | `~/workspace/conversation_log.jsonl` | Backup log file |
-| `MEMVID_PATH` | `~/workspace/anthony_memory.mv2` | Searchable memory file |
-| `MEMVID_BIN` | `~/.npm-global/bin/memvid` | Path to memvid CLI |
+## Memory File Formats
 
-## Memvid Integration
+### Mode 1: Single File (API or Free Mode)
+```
+anthony_memory.mv2
+├── [user] messages
+├── [assistant] responses  
+├── [agent:researcher] findings
+├── [agent:coder] code
+├── [tool:exec] commands
+└── [system] events
+```
 
-This skill requires a Memvid account for memories over 50MB:
+### Mode 2: Sharding (Monthly Rotation)
+```
+anthony_memory_2026-01.mv2  (January conversations)
+anthony_memory_2026-02.mv2  (February conversations) ← Current
+anthony_memory_2026-03.mv2  (March, auto-created on March 1)
+```
 
-### Free Tier (50MB)
-- Perfect for testing
-- ~5,000 conversation turns
-- No API key required
-
-### Paid Plans
-- **1GB:** $20/month - ~100,000 turns
-- **10GB:** $50/month - ~1M turns
-- **Unlimited:** Custom pricing
-
-Sign up at [memvid.com](https://memvid.com)
+---
 
 ## Troubleshooting
 
-### "Free tier limit exceeded"
-Your memory file is over 50MB. Options:
-1. Archive old conversations to new file
-2. Upgrade to paid Memvid plan
-3. Use JSONL-only mode (modify log.py)
+### "Free tier limit exceeded" (Free Mode)
+You've hit 50MB. Options:
+1. **Archive:** Rename file and start fresh: `mv anthony_memory.mv2 anthony_memory_archive.mv2`
+2. **Upgrade:** Get API key from memvid.com
+3. **Switch modes:** Use monthly sharding instead
 
-### "memvid: command not found"
-Install the CLI:
+### "Cannot find memory file" (Sharding Mode)
+Current month's file auto-creates. If missing:
 ```bash
-npm install -g @memvid/cli
+memvid create anthony_memory_$(date +%Y-%m).mv2
 ```
 
-### Missing conversations in search
-Memvid indexes are eventually consistent. Run:
-```bash
-memvid doctor anthony_memory.mv2 --rebuild-lex-index
-```
+### Missing agent conversations
+Agents log to their own sessions. Ensure skill is installed in main agent workspace and sub-agents inherit it.
+
+### Search returns wrong speaker
+Memvid uses semantic search. Be specific:
+- ❌ "Mercedes" → Returns all mentions
+- ✅ "What did I say about Mercedes" → Targets [user] frames
+- ✅ "Your recommendation about Mercedes" → Targets [assistant] frames
+
+---
+
+## Comparing the Three Modes
+
+| Feature | API Mode | Free Mode | Sharding Mode |
+|---------|----------|-----------|---------------|
+| **Cost** | $20-59/month | $0 | $0 |
+| **Capacity** | 1-25GB | 50MB | Unlimited (files) |
+| **Files** | 1 | 1 | Multiple (monthly) |
+| **Unified Search** | ✅ Yes | ✅ Yes | ❌ Per-file only |
+| **Cross-Month Context** | ✅ Yes | ✅ Yes | ❌ No |
+| **Setup Complexity** | Medium | Low | Low |
+| **Best For** | Power users | Testing | Long-term free use |
+
+---
 
 ## Future Enhancements
 
-- [ ] Automatic rotation when memory reaches capacity
-- [ ] Configurable filtering (exclude certain sessions)
-- [ ] Compression for older frames
-- [ ] Multi-user support
+- [ ] Auto-archive old months to cold storage
 - [ ] Web UI for browsing conversations
+- [ ] Cross-file search wrapper script
+- [ ] Export to other formats (Markdown, PDF)
+- [ ] Conversation threading visualization
 
-## Related Skills
-
-- **jsonl-logger** - Simpler version, JSONL only
-- **memvid-query** - Advanced search tools (planned)
-- **conversation-export** - Export to other formats (planned)
+---
 
 ## Support
 
-- GitHub Issues: [github.com/openclaw/unified-logger](https://github.com/openclaw/unified-logger)
-- OpenClaw Discord: [discord.com/invite/clawd](https://discord.com/invite/clawd)
-- Memvid Docs: [memvid.com/docs](https://memvid.com/docs)
+- **GitHub Issues:** [github.com/StackBlock/unified-logger](https://github.com/StackBlock/unified-logger)
+- **OpenClaw Discord:** [discord.com/invite/clawd](https://discord.com/invite/clawd)
+- **Memvid Support:** [memvid.com/docs](https://memvid.com/docs)
 
 ## License
 
-MIT - See LICENSE file for details.
+MIT - See [LICENSE](LICENSE) file for details.
