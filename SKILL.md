@@ -321,7 +321,7 @@ Memvid uses semantic search. Be specific:
 
 ## Support
 
-- **GitHub Issues:** [github.com/StackBlock/unified-logger](https://github.com/StackBlock/unified-logger)
+- **GitHub Issues:** [github.com/stackBlock/openclaw-memvid-logger](https://github.com/stackBlock/openclaw-memvid-logger)
 - **OpenClaw Discord:** [discord.com/invite/clawd](https://discord.com/invite/clawd)
 - **Memvid Support:** [memvid.com/docs](https://memvid.com/docs)
 

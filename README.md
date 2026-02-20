@@ -25,7 +25,7 @@ A dual-output conversation logger for [OpenClaw](https://openclaw.ai) that captu
 ```bash
 # Install
 npm install -g @memvid/cli
-git clone https://github.com/StackBlock/unified-logger.git
+git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r unified-logger ~/.openclaw/workspace/skills/
 
 # Configure
@@ -54,7 +54,7 @@ memvid ask anthony_memory.mv2 "Show me all Python scripts I requested"
 ```bash
 # Install
 npm install -g @memvid/cli
-git clone https://github.com/StackBlock/unified-logger.git
+git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r unified-logger ~/.openclaw/workspace/skills/
 export MEMVID_MODE="single"
 
@@ -79,7 +79,7 @@ memvid create ~/anthony_memory.mv2
 ```bash
 # Install
 npm install -g @memvid/cli
-git clone https://github.com/StackBlock/unified-logger.git
+git clone https://github.com/stackBlock/openclaw-memvid-logger.git
 cp -r unified-logger ~/.openclaw/workspace/skills/
 export MEMVID_MODE="monthly"  # Default
 
@@ -240,5 +240,5 @@ MIT - See [LICENSE](LICENSE)
 
 **Made with 🤝 for the OpenClaw community**
 
-- GitHub: [github.com/StackBlock/unified-logger](https://github.com/StackBlock/unified-logger)
+- GitHub: [github.com/stackBlock/openclaw-memvid-logger](https://github.com/stackBlock/openclaw-memvid-logger)
 - Discord: [discord.com/invite/clawd](https://discord.com/invite/clawd)
