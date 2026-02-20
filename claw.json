@@ -1,0 +1,27 @@
+{
+  "name": "openclaw-memvid-logger",
+  "version": "1.2.0",
+  "description": "Dual-output conversation logger with full context capture. Stores to JSONL (backup) and Memvid (semantic search) for long-term memory",
+  "author": "stackBlock",
+  "license": "MIT",
+  "category": ["memory", "logging", "search"],
+  "tags": ["memvid", "conversation", "memory", "logging", "semantic-search", "long-term-memory"],
+  "homepage": "https://github.com/stackBlock/openclaw-memvid-logger",
+  "repository": "https://github.com/stackBlock/openclaw-memvid-logger",
+  "readme": "./README-clawhub.md",
+  "entry": "tools/log.py",
+  "requirements": {
+    "python": ">=3.8",
+    "external": ["@memvid/cli >=2.0"]
+  },
+  "permissions": [
+    {
+      "name": "file_write",
+      "reason": "Write conversation logs to JSONL files and create Memvid .mv2 memory files"
+    },
+    {
+      "name": "exec_subprocess",
+      "reason": "Call memvid CLI to append frames to memory files"
+    }
+  ]
+}
