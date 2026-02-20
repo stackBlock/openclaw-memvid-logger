@@ -1,6 +1,6 @@
 {
   "name": "openclaw-memvid-logger",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Dual-output conversation logger with full context capture. Stores to JSONL (backup) and Memvid (semantic search) for long-term memory",
   "author": "stackBlock",
   "license": "MIT",

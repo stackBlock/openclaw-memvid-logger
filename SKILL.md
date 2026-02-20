@@ -1,14 +1,53 @@
-# Unified Conversation Logger v1.2.2
+# Unified Conversation Logger v1.2.3
 
-**Version:** 1.2.2 (Security & Transparency Edition)  
+**Version:** 1.2.3 (Cohesion & Consistency Edition)  
 **Author:** stackBlock  
 **License:** MIT  
 **OpenClaw:** >= 2026.2.12
 
 A dual-output conversation logger for OpenClaw that captures **everything** - user messages, assistant responses, sub-agent conversations, tool calls, and system events - to both JSONL (backup) and Memvid (semantic search) formats.
 
-## What's New in v1.2.2
+> **Memvid**: A single-file memory layer for AI agents with instant retrieval and long-term memory. Persistent, versioned, and portable memory, without databases.
+>
+> *"Replace complex RAG pipelines with a single portable file you own, and give your agent instant retrieval and long-term memory."*
 
+---
+
+## ⚠️ Security & Privacy Notice
+
+**Before installing, please understand:**
+
+This skill captures **everything** - by design. It logs all user messages, assistant responses, sub-agent conversations, tool outputs, and system events to local files. This enables powerful long-term memory but requires trust.
+
+**What you should know:**
+- **Broad capture scope:** This is intentional - the skill's purpose is complete conversation logging
+- **Sensitive data risk:** Tool outputs (commands, API responses, file contents) are logged. Review what tools expose.
+- **Continuous logging:** Once installed, it runs automatically on every assistant response until removed
+- **Optional cloud mode:** API mode with `MEMVID_API_KEY` sends data to memvid.com (third-party service). Free/local modes keep data on your machine only.
+- **Your responsibility:** Secure the JSONL/.mv2 files, rotate logs regularly, and audit what gets captured.
+
+**Mitigations available:**
+- Use **Free/Sharding mode** to keep data local (no API key needed)
+- Change default paths to encrypted locations
+- Review `tools/log.py` before installing to understand exactly what gets logged
+- File permissions: restrict access to log files (`chmod 600`)
+
+**This skill is for users who want complete conversation memory and accept the privacy trade-offs.**
+
+---
+
+## ✨ What Makes This Different
+
+- **📝 Dual Storage** - Every message saved to JSONL + Memvid simultaneously
+- **🔍 Semantic Search** - Ask "What did the researcher agent find about Tesla?" not just keyword search
+- **🤖 Full Context** - Captures user input, assistant output, agent chatter, tool results
+- **💾 Three Modes** - API (unlimited), Free (50MB), or Sharding (multi-file)
+- **🚀 Always On** - Hooks into OpenClaw automatically
+
+## What's New in v1.2.3
+
+- **Version Cohesion:** All files synchronized to v1.2.3
+- **Documentation Consistency:** README and SKILL.md now have matching content
 - **Security Improvements:** Generic paths (no hardcoded user directories), install script asks permission
 - **Registry Compliance:** Complete metadata (env vars, credentials, warnings) for ClawHub transparency
 - **Privacy Documentation:** Comprehensive Security & Privacy Notice explaining data capture scope
@@ -20,19 +59,21 @@ A dual-output conversation logger for OpenClaw that captures **everything** - us
 ## Quick Install (Choose Your Mode)
 
 ### Option 1: API Mode (Recommended) - Near Limitless Memory
-Best for: Heavy users, long-term archives, unified search across everything
+**Best for:** Heavy users, unified search across everything  
+**Cost:** $59-299/month via [memvid.com](https://memvid.com)
 
 ```bash
-# 1. Get API key from memvid.com ($20/month for 1GB, $59 for 25GB)
+# 1. Get API key from memvid.com ($59/month for 1GB, $299 for 25GB)
 export MEMVID_API_KEY="your_api_key_here"
 export MEMVID_MODE="single"
 
 # 2. Install
 npm install -g @memvid/cli
-cp -r unified-logger ~/.openclaw/workspace/skills/
+git clone https://github.com/stackBlock/openclaw-memvid-logger.git
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
 
 # 3. Create unified memory file
-memvid create memory.mv2
+memvid create ~/memory.mv2
 
 # 4. Start OpenClaw - everything logs to one searchable file
 ```
@@ -47,69 +88,79 @@ memvid ask memory.mv2 "Show me all the Python scripts I asked for"
 ---
 
 ### Option 2: Free Mode (50MB Limit) - Complete Memory in One Place
-Best for: Testing, light usage, single searchable file
+**Best for:** Testing, light usage, single searchable file  
+**Cost:** FREE
 
 ```bash
 # 1. Install (no API key needed)
 npm install -g @memvid/cli
-cp -r unified-logger ~/.openclaw/workspace/skills/
+git clone https://github.com/stackBlock/openclaw-memvid-logger.git
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
 export MEMVID_MODE="single"
 
 # 2. Create memory file
-memvid create memory.mv2
+memvid create ~/memory.mv2
 
 # 3. Start OpenClaw
 ```
 
-**Limitations:**
-- 50MB max (~5,000 conversation turns)
-- When you hit limit, you'll need to archive or upgrade
-- All searches from one file
-
-**Check usage:**
-```bash
-memvid stats memory.mv2
-```
+**⚠️ Limit:** 50MB (~5,000 conversation turns). When you hit it:
+- Archive and start fresh, OR
+- Upgrade to API mode ($59-299/month), OR  
+- Switch to Sharding mode
 
 ---
 
 ### Option 3: Sharding Mode - More Than 50MB, Free Forever
-Best for: Long-term use, staying under free tier, don't mind multi-file search
+**Best for:** Long-term use, staying under free tier  
+**Cost:** FREE  
+**Trade-off:** Multi-file search
 
 ```bash
 # 1. Install (no API key needed)
 npm install -g @memvid/cli
-cp -r unified-logger ~/.openclaw/workspace/skills/
+git clone https://github.com/stackBlock/openclaw-memvid-logger.git
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
 export MEMVID_MODE="monthly"  # This is the default
 
-# 2. Start OpenClaw - creates memory_2026-02.mv2, then 2026-03.mv2, etc.
+# 2. Start OpenClaw - auto-creates monthly files
 ```
 
 **How it works:**
-- New file created each month: `memory_2026-02.mv2`, `memory_2026-03.mv2`
-- Each file stays under 50MB limit
-- Old files remain searchable
-- Free forever
+- `memory_2026-02.mv2` (February)
+- `memory_2026-03.mv2` (March - auto-created)
+- Each file stays under 50MB
 
-**Search across files:**
+**⚠️ Sharding Search Differences:**
+
+Single-file search (API/Free modes):
 ```bash
-# Search current month
-memvid ask memory_2026-02.mv2 "recent discussions"
-
-# Search specific month
-memvid ask memory_2026-01.mv2 "what I said in January"
-
-# Search all months (bash wrapper)
-for f in memory_*.mv2; do
-    echo "=== $f ==="
-    memvid ask "$f" "your query" 2>/dev/null | head -10
-done
+# One search gets everything
+memvid ask memory.mv2 "What car did I decide to buy?"
+# Returns: Results from ALL conversations across ALL time
 ```
 
-**Drawbacks:**
-- Can't search across months in one query
-- Need to know which month to search
-- No unified "search everything" view
+Sharding search (requires multiple queries):
+```bash
+# Must search each month separately
+memvid ask memory_2026-02.mv2 "car decision"  # Recent
+memvid ask memory_2026-01.mv2 "car decision"  # January
+
+# Or use a wrapper script to search all files
+for file in memory_*.mv2; do
+    echo "=== $file ==="
+    memvid ask "$file" "car decision" 2>/dev/null | head -5
+done
+
+# You must know which month the conversation happened
+# No cross-month context - "compare this month to last month" won't work
+```
+
+**Why sharding is harder:**
+- Can't ask "what did we discuss in the past 3 months?" in one query
+- No unified timeline across months
+- Must remember which month you talked about what
+- No cross-file semantic comparison
 
 ---
 
@@ -133,8 +184,6 @@ done
 - ✅ Tool executions (bash commands, browser actions, file edits)
 - ✅ Background processes (cron jobs, heartbeats, scheduled tasks)
 - ✅ System events (config changes, restarts, errors)
-
----
 
 ## Architecture
 
@@ -163,8 +212,6 @@ done
     ↓                 ↓
  grep/jq       memvid ask/find
 ```
-
----
 
 ## Usage Examples
 
@@ -215,8 +262,6 @@ jq 'select(.role_tag == "user" and .content | contains("Python"))' conversation_
 jq 'select(.timestamp >= "2026-02-01" and .timestamp < "2026-03-01")' conversation_log.jsonl
 ```
 
----
-
 ## Configuration
 
 ### Environment Variables
@@ -225,8 +270,8 @@ jq 'select(.timestamp >= "2026-02-01" and .timestamp < "2026-03-01")' conversati
 |----------|---------|------|-------------|
 | `MEMVID_API_KEY` | (none) | API | Your memvid.com API key |
 | `MEMVID_MODE` | `monthly` | All | `single` or `monthly` |
-| `JSONL_LOG_PATH` | `~/conversation_log.jsonl` | All | Backup JSONL file |
-| `MEMVID_PATH` | `~/memory.mv2` | All | Base path for memory files |
+| `JSONL_LOG_PATH` | `~/workspace/conversation_log.jsonl` | All | Backup log file |
+| `MEMVID_PATH` | `~/workspace/memory.mv2` | All | Base path for memory files |
 | `MEMVID_BIN` | `~/.npm-global/bin/memvid` | All | Path to memvid CLI |
 
 ### OpenClaw Hooks (Advanced)
@@ -249,8 +294,6 @@ Add to `openclaw.json`:
 }
 ```
 
----
-
 ## Memory File Formats
 
 ### Mode 1: Single File (API or Free Mode)
@@ -271,15 +314,20 @@ memory_2026-02.mv2  (February conversations) ← Current
 memory_2026-03.mv2  (March, auto-created on March 1)
 ```
 
----
-
 ## Troubleshooting
 
 ### "Free tier limit exceeded" (Free Mode)
-You've hit 50MB. Options:
-1. **Archive:** Rename file and start fresh: `mv memory.mv2 memory_archive.mv2`
-2. **Upgrade:** Get API key from memvid.com
-3. **Switch modes:** Use monthly sharding instead
+```bash
+# Option 1: Archive and start fresh
+mv memory.mv2 memory_archive.mv2
+memvid create memory.mv2
+
+# Option 2: Switch to monthly sharding
+export MEMVID_MODE="monthly"
+
+# Option 3: Get API key
+export MEMVID_API_KEY="your_key"  # $59-299/month at memvid.com
+```
 
 ### "Cannot find memory file" (Sharding Mode)
 Current month's file auto-creates. If missing:
@@ -296,21 +344,30 @@ Memvid uses semantic search. Be specific:
 - ✅ "What did I say about Mercedes" → Targets [user] frames
 - ✅ "Your recommendation about Mercedes" → Targets [assistant] frames
 
----
-
 ## Comparing the Three Modes
 
 | Feature | API Mode | Free Mode | Sharding Mode |
 |---------|----------|-----------|---------------|
-| **Cost** | $59-299/month | $0 | $0 |
-| **Capacity** | 1-25GB | 50MB | Unlimited (files) |
+| **Cost** | $59-299/mo | FREE | FREE |
+| **Capacity** | 1-25GB+ | 50MB | Unlimited (files) |
 | **Files** | 1 | 1 | Multiple (monthly) |
 | **Unified Search** | ✅ Yes | ✅ Yes | ❌ Per-file only |
-| **Cross-Month Context** | ✅ Yes | ✅ Yes | ❌ No |
-| **Setup Complexity** | Medium | Low | Low |
+| **Cross-Context Search** | ✅ Full history | ✅ Full history | ❌ Month isolated |
 | **Best For** | Power users | Testing | Long-term free use |
+| **Complexity** | Simple | Simple | Must track files |
 
----
+## 💸 The Pricing Gap (AKA Why Sharding Exists)
+
+**The situation:** Memvid's pricing goes from $0 (50MB) straight to $59/month (25GB).  
+**The problem:** That's like buying a Ferrari when you just need a Honda Civic for your commute.
+
+**What we're doing about it:**  
+I reached out. While they consider it, Sharding Mode exists so you don't have to pay Ferrari prices for Honda Civic usage.
+
+**You can help:**  
+If you also think $0 → $59 is a bit much, reach out to Memvid at [memvid.com](https://memvid.com) and tell them stackBlock sent you. The more voices, the faster we get that $10-20 middle tier for the rest of us.
+
+*Until then: Sharding Mode. Because startups shouldn't have to choose between ramen and memory.* 🍜
 
 ## Future Enhancements
 
@@ -320,8 +377,6 @@ Memvid uses semantic search. Be specific:
 - [ ] Export to other formats (Markdown, PDF)
 - [ ] Conversation threading visualization
 
----
-
 ## Support
 
 - **GitHub Issues:** [github.com/stackBlock/openclaw-memvid-logger](https://github.com/stackBlock/openclaw-memvid-logger)
@@ -330,4 +385,13 @@ Memvid uses semantic search. Be specific:
 
 ## License
 
-MIT - See [LICENSE](LICENSE) file for details.
+MIT - See [LICENSE](LICENSE)
+
+---
+
+**About Memvid:**
+> Memvid is a single-file memory layer for AI agents with instant retrieval and long-term memory. 
+> Persistent, versioned, and portable memory, without databases.
+> 
+> Replace complex RAG pipelines with a single portable file you own, and give your agent 
+> instant retrieval and long-term memory.

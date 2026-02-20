@@ -1,6 +1,6 @@
 {
   "name": "@openclaw/unified-logger",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "description": "Dual-output conversation logger for OpenClaw - JSONL backup + Memvid semantic search",
   "main": "tools/log.py",
   "scripts": {
