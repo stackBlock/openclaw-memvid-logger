@@ -1,14 +1,17 @@
-# Unified Conversation Logger v1.2.0
+# Unified Conversation Logger v1.2.2
 
-**Version:** 1.2.0 (Full Context Edition)  
-**Author:** AnToni  
+**Version:** 1.2.2 (Security & Transparency Edition)  
+**Author:** stackBlock  
 **License:** MIT  
 **OpenClaw:** >= 2026.2.12
 
 A dual-output conversation logger for OpenClaw that captures **everything** - user messages, assistant responses, sub-agent conversations, tool calls, and system events - to both JSONL (backup) and Memvid (semantic search) formats.
 
-## What's New in v1.2.0
+## What's New in v1.2.2
 
+- **Security Improvements:** Generic paths (no hardcoded user directories), install script asks permission
+- **Registry Compliance:** Complete metadata (env vars, credentials, warnings) for ClawHub transparency
+- **Privacy Documentation:** Comprehensive Security & Privacy Notice explaining data capture scope
 - **Role Tagging:** Distinguishes user, assistant, agent:*, system, and tool messages
 - **Full Context:** Captures sub-agent chatter, tool results, background processes
 - **Three Storage Modes:** API mode (single file), Free mode (50MB), Sharding mode (monthly rotation)
@@ -29,16 +32,16 @@ npm install -g @memvid/cli
 cp -r unified-logger ~/.openclaw/workspace/skills/
 
 # 3. Create unified memory file
-memvid create anthony_memory.mv2
+memvid create memory.mv2
 
 # 4. Start OpenClaw - everything logs to one searchable file
 ```
 
 **Search everything at once:**
 ```bash
-memvid ask anthony_memory.mv2 "What did we discuss about BadjAI?"
-memvid ask anthony_memory.mv2 "What did the researcher agent find about Tesla?"
-memvid ask anthony_memory.mv2 "Show me all the Python scripts I asked for"
+memvid ask memory.mv2 "What did we discuss about BadjAI?"
+memvid ask memory.mv2 "What did the researcher agent find about Tesla?"
+memvid ask memory.mv2 "Show me all the Python scripts I asked for"
 ```
 
 ---
@@ -53,7 +56,7 @@ cp -r unified-logger ~/.openclaw/workspace/skills/
 export MEMVID_MODE="single"
 
 # 2. Create memory file
-memvid create anthony_memory.mv2
+memvid create memory.mv2
 
 # 3. Start OpenClaw
 ```
@@ -65,7 +68,7 @@ memvid create anthony_memory.mv2
 
 **Check usage:**
 ```bash
-memvid stats anthony_memory.mv2
+memvid stats memory.mv2
 ```
 
 ---
@@ -79,11 +82,11 @@ npm install -g @memvid/cli
 cp -r unified-logger ~/.openclaw/workspace/skills/
 export MEMVID_MODE="monthly"  # This is the default
 
-# 2. Start OpenClaw - creates anthony_memory_2026-02.mv2, then 2026-03.mv2, etc.
+# 2. Start OpenClaw - creates memory_2026-02.mv2, then 2026-03.mv2, etc.
 ```
 
 **How it works:**
-- New file created each month: `anthony_memory_2026-02.mv2`, `anthony_memory_2026-03.mv2`
+- New file created each month: `memory_2026-02.mv2`, `memory_2026-03.mv2`
 - Each file stays under 50MB limit
 - Old files remain searchable
 - Free forever
@@ -91,13 +94,13 @@ export MEMVID_MODE="monthly"  # This is the default
 **Search across files:**
 ```bash
 # Search current month
-memvid ask anthony_memory_2026-02.mv2 "recent discussions"
+memvid ask memory_2026-02.mv2 "recent discussions"
 
 # Search specific month
-memvid ask anthony_memory_2026-01.mv2 "what I said in January"
+memvid ask memory_2026-01.mv2 "what I said in January"
 
 # Search all months (bash wrapper)
-for f in anthony_memory_*.mv2; do
+for f in memory_*.mv2; do
     echo "=== $f ==="
     memvid ask "$f" "your query" 2>/dev/null | head -10
 done
@@ -169,34 +172,34 @@ done
 
 ```bash
 # What did you say about...?
-memvid ask anthony_memory_2026-02.mv2 "What was your recommendation about the Mercedes vs Tesla?"
+memvid ask memory_2026-02.mv2 "What was your recommendation about the Mercedes vs Tesla?"
 
 # What did I ask for...?
-memvid ask anthony_memory_2026-02.mv2 "What Python scripts did I request last week?"
+memvid ask memory_2026-02.mv2 "What Python scripts did I request last week?"
 
 # What did agents do...?
-memvid ask anthony_memory_2026-02.mv2 "What did the researcher agent find about options trading?"
+memvid ask memory_2026-02.mv2 "What did the researcher agent find about options trading?"
 
 # System events...?
-memvid ask anthony_memory_2026-02.mv2 "When did the PowerSchool grades cron job run?"
+memvid ask memory_2026-02.mv2 "When did the PowerSchool grades cron job run?"
 ```
 
 ### Keyword Search
 
 ```bash
 # Find specific terms
-memvid find anthony_memory_2026-02.mv2 --query "Mercedes"
+memvid find memory_2026-02.mv2 --query "Mercedes"
 
 # With filters
-memvid find anthony_memory_2026-02.mv2 --query "script" --tag agent:coder
+memvid find memory_2026-02.mv2 --query "script" --tag agent:coder
 ```
 
 ### Temporal Queries
 
 ```bash
-memvid when anthony_memory_2026-02.mv2 "yesterday"
-memvid when anthony_memory_2026-02.mv2 "last Tuesday"
-memvid when anthony_memory_2026-02.mv2 "3 days ago"
+memvid when memory_2026-02.mv2 "yesterday"
+memvid when memory_2026-02.mv2 "last Tuesday"
+memvid when memory_2026-02.mv2 "3 days ago"
 ```
 
 ### JSONL Backup
@@ -223,7 +226,7 @@ jq 'select(.timestamp >= "2026-02-01" and .timestamp < "2026-03-01")' conversati
 | `MEMVID_API_KEY` | (none) | API | Your memvid.com API key |
 | `MEMVID_MODE` | `monthly` | All | `single` or `monthly` |
 | `JSONL_LOG_PATH` | `~/conversation_log.jsonl` | All | Backup JSONL file |
-| `MEMVID_PATH` | `~/anthony_memory.mv2` | All | Base path for memory files |
+| `MEMVID_PATH` | `~/memory.mv2` | All | Base path for memory files |
 | `MEMVID_BIN` | `~/.npm-global/bin/memvid` | All | Path to memvid CLI |
 
 ### OpenClaw Hooks (Advanced)
@@ -252,7 +255,7 @@ Add to `openclaw.json`:
 
 ### Mode 1: Single File (API or Free Mode)
 ```
-anthony_memory.mv2
+memory.mv2
 ├── [user] messages
 ├── [assistant] responses  
 ├── [agent:researcher] findings
@@ -263,9 +266,9 @@ anthony_memory.mv2
 
 ### Mode 2: Sharding (Monthly Rotation)
 ```
-anthony_memory_2026-01.mv2  (January conversations)
-anthony_memory_2026-02.mv2  (February conversations) ← Current
-anthony_memory_2026-03.mv2  (March, auto-created on March 1)
+memory_2026-01.mv2  (January conversations)
+memory_2026-02.mv2  (February conversations) ← Current
+memory_2026-03.mv2  (March, auto-created on March 1)
 ```
 
 ---
@@ -274,14 +277,14 @@ anthony_memory_2026-03.mv2  (March, auto-created on March 1)
 
 ### "Free tier limit exceeded" (Free Mode)
 You've hit 50MB. Options:
-1. **Archive:** Rename file and start fresh: `mv anthony_memory.mv2 anthony_memory_archive.mv2`
+1. **Archive:** Rename file and start fresh: `mv memory.mv2 memory_archive.mv2`
 2. **Upgrade:** Get API key from memvid.com
 3. **Switch modes:** Use monthly sharding instead
 
 ### "Cannot find memory file" (Sharding Mode)
 Current month's file auto-creates. If missing:
 ```bash
-memvid create anthony_memory_$(date +%Y-%m).mv2
+memvid create memory_$(date +%Y-%m).mv2
 ```
 
 ### Missing agent conversations
