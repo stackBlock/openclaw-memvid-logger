@@ -1,10 +1,12 @@
-# Memvid Unified Logger for OpenClaw
+# OpenClaw Memvid Logger
 
 [![OpenClaw](https://img.shields.io/badge/OpenClaw->=2026.2.12-blue)](https://openclaw.ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Memvid](https://img.shields.io/badge/Memvid-2.0+-green)](https://memvid.com)
 
-> **Never lose a conversation. Search everything you've ever discussed.**
+> **Memvid**: A single-file memory layer for AI agents with instant retrieval and long-term memory. Persistent, versioned, and portable memory, without databases.
+>
+> *"Replace complex RAG pipelines with a single portable file you own, and give your agent instant retrieval and long-term memory."*
 
 A dual-output conversation logger for [OpenClaw](https://openclaw.ai) that captures **everything** - user messages, assistant responses, sub-agent conversations, tool executions, and system events - to both JSONL (backup) and Memvid (semantic search) formats.
 
@@ -20,13 +22,13 @@ A dual-output conversation logger for [OpenClaw](https://openclaw.ai) that captu
 
 ### Option 1: API Mode - Near Limitless Memory ⭐ Recommended
 **Best for:** Heavy users, unified search across everything  
-**Cost:** $20-59/month via [memvid.com](https://memvid.com)
+**Cost:** $59-299/month via [memvid.com](https://memvid.com)
 
 ```bash
 # Install
 npm install -g @memvid/cli
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
-cp -r unified-logger ~/.openclaw/workspace/skills/
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
 
 # Configure
 export MEMVID_API_KEY="your_key_here"
@@ -38,11 +40,18 @@ memvid create ~/anthony_memory.mv2
 # Start OpenClaw - everything logs to one searchable file
 ```
 
-**Search everything:**
+**Search everything (single query across all time):**
 ```bash
+# Natural language questions
 memvid ask anthony_memory.mv2 "What did we discuss about BadjAI?"
 memvid ask anthony_memory.mv2 "What did the researcher agent find?"
 memvid ask anthony_memory.mv2 "Show me all Python scripts I requested"
+
+# Keyword search
+memvid find anthony_memory.mv2 --query "Mercedes"
+
+# Temporal queries
+memvid when anthony_memory.mv2 "last Tuesday"
 ```
 
 ---
@@ -55,7 +64,7 @@ memvid ask anthony_memory.mv2 "Show me all Python scripts I requested"
 # Install
 npm install -g @memvid/cli
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
-cp -r unified-logger ~/.openclaw/workspace/skills/
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
 export MEMVID_MODE="single"
 
 # Create memory
@@ -66,21 +75,21 @@ memvid create ~/anthony_memory.mv2
 
 **⚠️ Limit:** 50MB (~5,000 conversation turns). When you hit it:
 - Archive and start fresh, OR
-- Upgrade to API mode, OR  
+- Upgrade to API mode ($59-299/month), OR  
 - Switch to Sharding mode
 
 ---
 
-### Option 3: Sharding Mode - Free Forever
+### Option 3: Sharding Mode - Free Forever (Workaround)
 **Best for:** Long-term use, staying under free tier  
 **Cost:** FREE  
-**Trade-off:** Multi-file search
+**Trade-off:** Multi-file search required
 
 ```bash
 # Install
 npm install -g @memvid/cli
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
-cp -r unified-logger ~/.openclaw/workspace/skills/
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
 export MEMVID_MODE="monthly"  # Default
 
 # Start OpenClaw - auto-creates monthly files
@@ -91,48 +100,36 @@ export MEMVID_MODE="monthly"  # Default
 - `anthony_memory_2026-03.mv2` (March - auto-created)
 - Each file stays under 50MB
 
-**Search per month:**
+**⚠️ Sharding Search Differences:**
+
+Single-file search (API/Free modes):
 ```bash
-memvid ask anthony_memory_2026-02.mv2 "recent discussions"
-memvid ask anthony_memory_2026-01.mv2 "January conversations"
+# One search gets everything
+memvid ask anthony_memory.mv2 "What car did I decide to buy?"
+# Returns: Results from ALL conversations across ALL time
 ```
 
----
-
-## 🔍 Search Examples
-
-### Natural Language (Semantic)
+Sharding search (requires multiple queries):
 ```bash
-# What you said
-memvid ask anthony_memory.mv2 "What did I say about the Mercedes?"
+# Must search each month separately
+memvid ask anthony_memory_2026-02.mv2 "car decision"  # Recent
+memvid ask anthony_memory_2026-01.mv2 "car decision"  # January
 
-# What I recommended  
-memvid ask anthony_memory.mv2 "What was your recommendation about Tesla?"
+# Or use a wrapper script to search all files
+for file in anthony_memory_*.mv2; do
+    echo "=== $file ==="
+    memvid ask "$file" "car decision" 2>/dev/null | head -5
+done
 
-# What agents did
-memvid ask anthony_memory.mv2 "What did the researcher agent find about options?"
-
-# System events
-memvid ask anthony_memory.mv2 "When did the PowerSchool cron job run?"
+# You must know which month the conversation happened
+# No cross-month context - "compare this month to last month" won't work
 ```
 
-### Keywords
-```bash
-memvid find anthony_memory.mv2 --query "Python script"
-memvid find anthony_memory.mv2 --query "Mercedes" --tag agent:researcher
-```
-
-### Temporal
-```bash
-memvid when anthony_memory.mv2 "yesterday"
-memvid when anthony_memory.mv2 "last Tuesday"
-```
-
-### JSONL Backup
-```bash
-grep "Mercedes" conversation_log.jsonl
-jq 'select(.role_tag == "user")' conversation_log.jsonl
-```
+**Why sharding is harder:**
+- Can't ask "what did we discuss in the past 3 months?" in one query
+- No unified timeline across months
+- Must remember which month you talked about what
+- No cross-file semantic comparison
 
 ---
 
@@ -140,12 +137,73 @@ jq 'select(.role_tag == "user")' conversation_log.jsonl
 
 | Feature | API Mode | Free Mode | Sharding Mode |
 |---------|----------|-----------|---------------|
-| **Cost** | $20-59/mo | FREE | FREE |
-| **Capacity** | 1-25GB | 50MB | Unlimited |
-| **Files** | 1 | 1 | Monthly files |
-| **Unified Search** | ✅ | ✅ | ❌ Per-file |
-| **Cross-Context** | ✅ | ✅ | ❌ |
-| **Best For** | Power users | Testing | Long-term free |
+| **Cost** | $59-299/mo | FREE | FREE |
+| **Capacity** | 1GB-25GB+ | 50MB | Unlimited (files) |
+| **Files** | 1 | 1 | Multiple (monthly) |
+| **Unified Search** | ✅ One query | ✅ One query | ❌ Per-file queries |
+| **Cross-Context Search** | ✅ Full history | ✅ Full history | ❌ Month isolated |
+| **Best For** | Power users | Testing | Workaround for free tier |
+| **Complexity** | Simple | Simple | Must track files |
+
+---
+
+## 🔍 Search Examples by Mode
+
+### API Mode / Free Mode (Single File)
+
+**One command searches everything:**
+
+```bash
+# What did you say about...?
+memvid ask anthony_memory.mv2 "What was your recommendation about the Mercedes?"
+
+# What did I ask for...?
+memvid ask anthony_memory.mv2 "What Python scripts did I request?"
+
+# What did agents do...?
+memvid ask anthony_memory.mv2 "What did the researcher agent find about options?"
+
+# Temporal - searches all history
+memvid when anthony_memory.mv2 "last month"
+
+# Cross-time context
+memvid ask anthony_memory.mv2 "Compare our BadjAI discussions from January to March"
+```
+
+### Sharding Mode (Multiple Files)
+
+**Must specify which file to search:**
+
+```bash
+# Recent conversations (current month)
+memvid ask anthony_memory_2026-02.mv2 "recent discussions"
+
+# Specific month
+memvid ask anthony_memory_2026-01.mv2 "January conversations"
+
+# Search all months (manual)
+for file in anthony_memory_*.mv2; do
+    echo "=== $file ==="
+    memvid ask "$file" "your query"
+done
+
+# Can't do: cross-month comparison
+# Can't do: "what did we discuss over the past 3 months"
+# Can't do: unified timeline view
+```
+
+### JSONL Backup (All Modes)
+
+```bash
+# Quick grep
+grep "Mercedes" conversation_log.jsonl
+
+# Complex queries with jq
+jq 'select(.role_tag == "user" and .content | contains("Python"))' conversation_log.jsonl
+
+# Time range (works across all modes)
+jq 'select(.timestamp >= "2026-02-01" and .timestamp < "2026-03-01")' conversation_log.jsonl
+```
 
 ---
 
@@ -194,7 +252,7 @@ export MEMVID_API_KEY="your_key_here"
 
 ## 🆘 Troubleshooting
 
-**"Free tier limit exceeded"**
+**"Free tier limit exceeded" (Free Mode)**
 ```bash
 # Option 1: Archive and start fresh
 mv anthony_memory.mv2 anthony_memory_archive.mv2
@@ -204,7 +262,7 @@ memvid create anthony_memory.mv2
 export MEMVID_MODE="monthly"
 
 # Option 3: Get API key
-export MEMVID_API_KEY="your_key"
+export MEMVID_API_KEY="your_key"  # $59-299/month at memvid.com
 ```
 
 **"memvid: command not found"**
@@ -242,3 +300,10 @@ MIT - See [LICENSE](LICENSE)
 
 - GitHub: [github.com/stackBlock/openclaw-memvid-logger](https://github.com/stackBlock/openclaw-memvid-logger)
 - Discord: [discord.com/invite/clawd](https://discord.com/invite/clawd)
+
+**About Memvid:**
+> Memvid is a single-file memory layer for AI agents with instant retrieval and long-term memory. 
+> Persistent, versioned, and portable memory, without databases.
+> 
+> Replace complex RAG pipelines with a single portable file you own, and give your agent 
+> instant retrieval and long-term memory.

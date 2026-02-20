@@ -299,7 +299,7 @@ Memvid uses semantic search. Be specific:
 
 | Feature | API Mode | Free Mode | Sharding Mode |
 |---------|----------|-----------|---------------|
-| **Cost** | $20-59/month | $0 | $0 |
+| **Cost** | $59-299/month | $0 | $0 |
 | **Capacity** | 1-25GB | 50MB | Unlimited (files) |
 | **Files** | 1 | 1 | Multiple (monthly) |
 | **Unified Search** | ✅ Yes | ✅ Yes | ❌ Per-file only |
