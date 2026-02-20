@@ -245,6 +245,28 @@ jq 'select(.timestamp >= "2026-02-01" and .timestamp < "2026-03-01")' conversati
 
 ---
 
+## 🔍 Search Usage
+
+**Default search mode: `--mode neural`** for maximum accuracy and semantic understanding:
+
+```bash
+# Semantic search (default recommended mode)
+memvid ask anthony_memory.mv2 "What did we discuss about BadjAI?" --mode neural
+memvid ask anthony_memory.mv2 "What supplements did Dr. Sinclair recommend?" --mode neural
+memvid ask anthony_memory.mv2 "Show me all Python scripts I requested" --mode neural
+
+# Alternative modes (when explicitly needed)
+memvid find anthony_memory.mv2 --mode lex --query "exact_keyword"     # Fastest: ~8ms
+memvid find anthony_memory.mv2 --mode hybrid --query "diabetes meds"  # Balanced: ~300ms
+```
+
+**Speed vs Accuracy:**
+- `neural`: ~200ms — **Default** — Understands context, synonyms, meaning
+- `lex`: ~8ms — Exact keyword matching only
+- `hybrid`: ~300-500ms — Combines both approaches
+
+The ~200ms latency for neural mode is the recommended default for production use.
+
 ## 📁 What Gets Logged
 
 | Source | Tag | Captured |

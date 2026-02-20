@@ -1,6 +1,6 @@
-# Unified Conversation Logger v1.2.3
+# Unified Conversation Logger v1.2.4
 
-**Version:** 1.2.3 (Cohesion & Consistency Edition)  
+**Version:** 1.2.4 (Neural Default Edition)  
 **Author:** stackBlock  
 **License:** MIT  
 **OpenClaw:** >= 2026.2.12
@@ -44,8 +44,15 @@ This skill captures **everything** - by design. It logs all user messages, assis
 - **💾 Three Modes** - API (unlimited), Free (50MB), or Sharding (multi-file)
 - **🚀 Always On** - Hooks into OpenClaw automatically
 
-## What's New in v1.2.3
+## What's New in v1.2.4
 
+- **Neural Search Default:** Updated search guidance to use `--mode neural` as default for maximum accuracy
+- **Performance Documentation:** Clarified latency trade-offs (~200ms for neural vs ~8ms for lexical)
+- **Search Mode Policy:** Recommends neural for semantic understanding, lexical only when speed is critical
+
+## Previous Versions
+
+### v1.2.3
 - **Version Cohesion:** All files synchronized to v1.2.3
 - **Documentation Consistency:** README and SKILL.md now have matching content
 - **Security Improvements:** Generic paths (no hardcoded user directories), install script asks permission
@@ -248,6 +255,45 @@ memvid when memory_2026-02.mv2 "yesterday"
 memvid when memory_2026-02.mv2 "last Tuesday"
 memvid when memory_2026-02.mv2 "3 days ago"
 ```
+
+## ⚡ Search Performance Guide
+
+Memvid has three search modes. **This skill uses `--mode neural` by default for maximum accuracy:**
+
+### Default: Neural Search (Recommended)
+```bash
+# Always use neural for semantic understanding and context
+memvid ask memory.mv2 "What supplements did Dr. Sinclair recommend?" --mode neural
+memvid ask memory.mv2 "What did we discuss about BadjAI?" --mode neural
+memvid ask memory.mv2 "Show me the Python scripts I requested" --mode neural
+```
+**Speed:** ~200ms | **Best for:** Semantic understanding, context, synonyms, conceptual relationships
+
+### Alternative Modes (Use When Explicitly Requested)
+
+**Mode 1: Lexical Search (Fastest)**
+```bash
+# Use only for exact keyword matching when speed is critical
+memvid find memory.mv2 --mode lex --query "metformin"
+```
+**Speed:** ~8ms | **Use when:** Exact word matching needed, latency is critical
+
+**Mode 2: Hybrid Search (Balanced)**
+```bash
+# Combines lexical + neural
+memvid find memory.mv2 --mode hybrid --query "diabetes medications"
+```
+**Speed:** ~300-500ms | **Use when:** You want both exact matches and semantic similarity
+
+### Why Neural as Default?
+
+| Mode | Speed | Accuracy | Use Case |
+|------|-------|----------|----------|
+| `neural` | ~200ms | **Highest** | **Default - semantic understanding** |
+| `lex` | ~8ms | Keyword only | Speed-critical exact matches |
+| `hybrid` | ~300-500ms | High | Balanced approach |
+
+**The ~200ms trade-off is worth it:** Neural mode understands context, handles paraphrases, and finds conceptually related information that lexical search misses entirely.
 
 ### JSONL Backup
 
