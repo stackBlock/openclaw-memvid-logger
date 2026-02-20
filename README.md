@@ -147,6 +147,21 @@ done
 
 ---
 
+## 💸 The Pricing Gap (AKA Why Sharding Exists)
+
+**The situation:** Memvid's pricing goes from $0 (50MB) straight to $59/month (25GB).  
+**The problem:** That's like buying a Ferrari when you just need a Honda Civic for your commute.
+
+**What we're doing about it:**  
+I reached out. While they consider it, Sharding Mode exists so you don't have to pay Ferrari prices for Honda Civic usage.
+
+**You can help:**  
+If you also think $0 → $59 is a bit much, reach out to Memvid at [memvid.com](https://memvid.com) and tell them stackBlock sent you. The more voices, the faster we get that $10-20 middle tier for the rest of us.
+
+*Until then: Sharding Mode. Because startups shouldn't have to choose between ramen and memory.* 🍜
+
+---
+
 ## 🔍 Search Examples by Mode
 
 ### API Mode / Free Mode (Single File)
