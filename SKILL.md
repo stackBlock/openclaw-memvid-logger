@@ -1,4 +1,4 @@
-# Unified Conversation Logger v1.2.5
+# Unified Conversation Logger v1.2.6
 
 **Version:** 1.2.4 (Neural Default Edition)  
 **Author:** stackBlock  
