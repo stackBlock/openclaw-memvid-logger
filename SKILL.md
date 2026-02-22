@@ -1,6 +1,6 @@
 # Unified Conversation Logger v1.2.5
 
-**Version:** 1.2.4 (Neural Default Edition)  
+**Version:** 1.2.5 (Critical Fixes Edition)  
 **Author:** stackBlock  
 **License:** MIT  
 **OpenClaw:** >= 2026.2.12
@@ -44,13 +44,26 @@ This skill captures **everything** - by design. It logs all user messages, assis
 - **💾 Three Modes** - API (unlimited), Free (50MB), or Sharding (multi-file)
 - **🚀 Always On** - Hooks into OpenClaw automatically
 
-## What's New in v1.2.4
+## What's New in v1.2.5
 
+### Critical Fixes
+- **Memvid Tag Format Fixed:** Updated to `KEY=VALUE` format for Memvid 2.0+ compatibility
+  - Old (broken): `--tag "user,telegram"`
+  - New (fixed): `--tag "role=user" --tag "source=telegram"`
+- **Environment Variable Documentation:** Added `/etc/environment` instructions (`.bashrc` doesn't work for background services)
+- **Hook Handler Format:** Documented JavaScript (`.js`) requirement for OpenClaw 2026.2.12+
+- **Comprehensive Troubleshooting:** Added detailed troubleshooting section for common setup issues
+
+### Compatibility
+- Verified with OpenClaw 2026.2.12
+- Verified with Memvid CLI 2.0+
+
+## Previous Versions
+
+### v1.2.4
 - **Neural Search Default:** Updated search guidance to use `--mode neural` as default for maximum accuracy
 - **Performance Documentation:** Clarified latency trade-offs (~200ms for neural vs ~8ms for lexical)
 - **Search Mode Policy:** Recommends neural for semantic understanding, lexical only when speed is critical
-
-## Previous Versions
 
 ### v1.2.3
 - **Version Cohesion:** All files synchronized to v1.2.3
