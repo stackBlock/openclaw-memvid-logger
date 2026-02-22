@@ -134,32 +134,36 @@ def get_frame_title(log_entry: Dict) -> str:
         return f"[{role}] {content_preview}..."
 
 
-def build_tags(log_entry: Dict) -> str:
-    """Build comma-separated tags for memvid."""
+def build_tags(log_entry: Dict) -> list:
+    """Build KEY=VALUE tags for memvid."""
     tags = []
     
     # Role tag
     role = log_entry.get("role_tag", "unknown")
-    tags.append(role)
+    tags.append(f"role={role}")
     
-    # Source tags
+    # Source tag
     if log_entry.get("source"):
-        tags.append(log_entry.get("source"))
+        tags.append(f"source={log_entry.get('source')}")
     
-    # Agent tags
+    # Agent tag
     if log_entry.get("agent_id"):
-        tags.append(f"agent:{log_entry.get('agent_id')}")
+        tags.append(f"agent={log_entry.get('agent_id')}")
     
-    # Tool tags
+    # Tool tag
     if log_entry.get("tool_calls"):
-        tags.append("has_tools")
+        tags.append("has_tools=true")
     
     # Session tag
     session = log_entry.get("session_id", "")[:8]
     if session:
-        tags.append(f"session:{session}")
+        tags.append(f"session={session}")
     
-    return ",".join(tags) if tags else "openclaw"
+    # Event type
+    if log_entry.get("event_type"):
+        tags.append(f"event={log_entry.get('event_type')}")
+    
+    return tags if tags else ["source=openclaw"]
 
 
 def log_to_jsonl(log_entry: Dict) -> bool:
@@ -192,15 +196,19 @@ def log_to_memvid(log_entry: Dict) -> bool:
         date_only = ts.split('T')[0] if 'T' in ts else ts[:10]
         tags = build_tags(log_entry)
         
+        # Build command with multiple --tag arguments
+        cmd = [
+            MEMVID_BIN, "put", MEMVID_PATH,
+            "--title", title,
+            "--timestamp", date_only,
+            "--input", temp_path
+        ]
+        for tag in tags:
+            cmd.extend(["--tag", tag])
+        
         # Call memvid put
         result = subprocess.run(
-            [
-                MEMVID_BIN, "put", MEMVID_PATH,
-                "--title", title,
-                "--timestamp", date_only,
-                "--tag", tags,
-                "--input", temp_path
-            ],
+            cmd,
             capture_output=True,
             text=True,
             timeout=30

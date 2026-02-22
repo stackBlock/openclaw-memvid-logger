@@ -294,40 +294,178 @@ User → OpenClaw → log.py → JSONL (backup)
 
 ## ⚙️ Configuration
 
+**⚠️ CRITICAL: Environment variables must be set system-wide**
+
+OpenClaw runs as a background service and does not inherit `.bashrc` or `.profile`. You **must** set environment variables in `/etc/environment`:
+
 ```bash
-# Choose your mode
-export MEMVID_MODE="single"    # API or Free mode
-export MEMVID_MODE="monthly"   # Sharding mode (default)
+# Add to /etc/environment (requires sudo)
+sudo tee -a /etc/environment << 'EOF'
+MEMVID_MODE="monthly"
+MEMVID_PATH="/home/YOUR_USERNAME/.openclaw/workspace/anthony_memory_2026-02.mv2"
+JSONL_LOG_PATH="/home/YOUR_USERNAME/.openclaw/workspace/conversation_log.jsonl"
+MEMVID_BIN="/home/YOUR_USERNAME/.npm-global/bin/memvid"
+EOF
 
-# Paths
-export JSONL_LOG_PATH="~/conversation_log.jsonl"
-export MEMVID_PATH="~/anthony_memory.mv2"
-export MEMVID_BIN="~/.npm-global/bin/memvid"
+# Reboot to apply
+sudo reboot
+```
 
-# For API mode only
+**Why `/etc/environment`?**
+- `.bashrc` / `.profile`: Only work for interactive terminal sessions
+- `/etc/environment`: System-wide, works for background services including OpenClaw
+
+**After reboot, verify:**
+```bash
+echo $MEMVID_MODE  # Should show: monthly
+```
+
+### Variable Reference
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `MEMVID_MODE` | Yes | `monthly` | `single` (one file) or `monthly` (rotation) |
+| `MEMVID_PATH` | Yes | Auto-derived | Path to `.mv2` memory file |
+| `JSONL_LOG_PATH` | Yes | Auto-derived | Path to JSONL backup |
+| `MEMVID_BIN` | Yes | `memvid` | Path to memvid CLI |
+| `MEMVID_API_KEY` | No | - | For API mode only (paid) |
+
+### Quick Mode Reference
+
+```bash
+# API Mode (single file, cloud, paid)
+export MEMVID_MODE="single"
 export MEMVID_API_KEY="your_key_here"
+
+# Free Mode (single file, local, 50MB limit)
+export MEMVID_MODE="single"
+
+# Sharding Mode (monthly files, local, unlimited) ⭐ Recommended
+export MEMVID_MODE="monthly"
 ```
 
 ---
 
 ## 🆘 Troubleshooting
 
-**"Free tier limit exceeded" (Free Mode)**
+### "Environment variables not set" / Hook not logging
+
+**Symptoms:**
+- `openclaw hooks info unified-logger` shows environment requirements as ❌
+- JSONL file not being written
+- `echo $MEMVID_MODE` returns empty
+
+**Cause:** Variables set in `.bashrc` or `.profile` don't persist for background services.
+
+**Fix:**
+```bash
+# Check current setting
+echo $MEMVID_MODE
+
+# If empty, add to /etc/environment (NOT .bashrc)
+sudo tee -a /etc/environment << 'EOF'
+MEMVID_MODE="monthly"
+MEMVID_PATH="/home/YOUR_USERNAME/.openclaw/workspace/memory_2026-02.mv2"
+JSONL_LOG_PATH="/home/YOUR_USERNAME/.openclaw/workspace/conversation_log.jsonl"
+MEMVID_BIN="/home/YOUR_USERNAME/.npm-global/bin/memvid"
+EOF
+
+# Reboot and verify
+sudo reboot
+# After reboot:
+echo $MEMVID_MODE  # Should show: monthly
+```
+
+### "Hook registered but not logging messages"
+
+**Symptoms:**
+- `openclaw hooks list` shows ✅ ready
+- `openclaw hooks info unified-logger` shows all requirements met
+- But JSONL/Memvid not being updated
+
+**Cause:** OpenClaw 2026.2.12+ requires JavaScript (`.js`) handlers, not TypeScript (`.ts`), for managed hooks.
+
+**Fix:** Ensure handler is JavaScript:
+```bash
+ls ~/.openclaw/hooks/unified-logger/
+# Should show: handler.js (NOT handler.ts)
+
+# If you have handler.ts, rename/create handler.js instead
+```
+
+**Correct hook structure:**
+```
+~/.openclaw/hooks/unified-logger/
+├── HOOK.md      # Metadata with "export": "default"
+├── handler.js   # JavaScript handler (NOT .ts)
+└── healthcheck.py  # Optional monitoring
+```
+
+### "Memvid index not updating" / "invalid value for --tag"
+
+**Symptoms:**
+- JSONL file updates correctly
+- Memvid search returns no results
+- Error: `expected KEY=VALUE, got 'user,telegram'`
+
+**Cause:** Memvid 2.0+ changed tag format from comma-separated to `KEY=VALUE` pairs.
+
+**Fix:** Update to unified-logger v1.2.5+ which uses correct format:
+```python
+# OLD (broken):
+--tag "user,telegram,agent:researcher"
+
+# NEW (correct):
+--tag "role=user" --tag "source=telegram" --tag "agent=researcher"
+```
+
+### "Free tier limit exceeded" (Free Mode)
+
 ```bash
 # Option 1: Archive and start fresh
 mv anthony_memory.mv2 anthony_memory_archive.mv2
 memvid create anthony_memory.mv2
 
-# Option 2: Switch to monthly sharding
-export MEMVID_MODE="monthly"
+# Option 2: Switch to monthly sharding (recommended)
+# Edit /etc/environment:
+MEMVID_MODE="monthly"
+# Then reboot
 
-# Option 3: Get API key
+# Option 3: Get API key for unlimited
 export MEMVID_API_KEY="your_key"  # $59-299/month at memvid.com
 ```
 
-**"memvid: command not found"**
+### "memvid: command not found"
+
 ```bash
 npm install -g memvid
+
+# Verify:
+which memvid  # Should show path
+memvid --version  # Should show version
+```
+
+### Check Everything is Working
+
+```bash
+# 1. Environment variables
+echo $MEMVID_MODE
+echo $JSONL_LOG_PATH
+echo $MEMVID_PATH
+echo $MEMVID_BIN
+
+# 2. Hook status
+openclaw hooks list
+openclaw hooks info unified-logger
+
+# 3. Recent logs
+tail -5 "$JSONL_LOG_PATH"
+
+# 4. Memvid search
+memvid find "$MEMVID_PATH" --query "test"
+
+# 5. Health check log
+cat ~/.openclaw/logs/logger-health.log
 ```
 
 ---
