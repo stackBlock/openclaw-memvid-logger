@@ -1,7 +1,7 @@
 {
   "name": "@openclaw/unified-logger",
-  "version": "1.2.5",
-  "description": "Dual-output conversation logger for OpenClaw - JSONL backup + Memvid semantic search",
+  "version": "1.4.0",
+  "description": "Dual-output conversation logger for OpenClaw - JSONL backup + Memvid semantic search with weekly rotation and neural embeddings",
   "main": "tools/log.py",
   "scripts": {
     "test": "python3 -m pytest tests/",
@@ -62,6 +62,12 @@
     },
     "config": {
       "env": {
+        "MEMVID_MODE": {
+          "description": "Rotation mode: 'single' (one file), 'monthly', or 'weekly' (recommended for free tier)",
+          "default": "weekly",
+          "type": "string",
+          "enum": ["single", "monthly", "weekly"]
+        },
         "JSONL_LOG_PATH": {
           "description": "Path to JSONL backup file",
           "default": "~/workspace/conversation_log.jsonl",

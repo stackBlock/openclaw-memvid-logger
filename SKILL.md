@@ -1,7 +1,7 @@
-# Unified Conversation Logger v1.2.5
+# Unified Conversation Logger v1.4.0
 
-**Version:** 1.2.5 (Critical Fixes Edition)  
-**Author:** stackBlock  
+**Version:** 1.4.0 (Weekly Rotation + Embeddings Edition)  
+**Author:** AnToni (based on work by stackBlock)  
 **License:** MIT  
 **OpenClaw:** >= 2026.2.12
 
@@ -43,38 +43,28 @@ This skill captures **everything** - by design. It logs all user messages, assis
 - **🤖 Full Context** - Captures user input, assistant output, agent chatter, tool results
 - **💾 Three Modes** - API (unlimited), Free (50MB), or Sharding (multi-file)
 - **🚀 Always On** - Hooks into OpenClaw automatically
+- **📅 Weekly Rotation** - Safer free tier usage with automatic weekly file rotation
+- **🧠 Embeddings** - Full semantic embeddings for neural search
 
-## What's New in v1.2.5
+## What's New in v1.4.0
 
-### Critical Fixes
-- **Memvid Tag Format Fixed:** Updated to `KEY=VALUE` format for Memvid 2.0+ compatibility
-  - Old (broken): `--tag "user,telegram"`
-  - New (fixed): `--tag "role=user" --tag "source=telegram"`
-- **Environment Variable Documentation:** Added `/etc/environment` instructions (`.bashrc` doesn't work for background services)
-- **Hook Handler Format:** Documented JavaScript (`.js`) requirement for OpenClaw 2026.2.12+
-- **Comprehensive Troubleshooting:** Added detailed troubleshooting section for common setup issues
+### Major Changes
+- **Weekly Rotation Mode:** Changed from monthly to weekly file rotation
+  - **Why:** Monthly files can approach 50MB limit too quickly
+  - **Format:** `memory_YYYY-WW.mv2` (e.g., `memory_2026-W09.mv2`)
+  - **Benefit:** Each week starts fresh, stays well under free tier limit
+  - **Embeddings:** Full semantic embeddings enabled for neural search
+
+### Previous: v1.3.1
+- **Memvid Duplicate URI Fix:** Added `--allow-duplicate` flag
+- **Failure Alerts:** Telegram notifications when logging fails
+- **Tag Format:** KEY=VALUE format for Memvid 2.0+
 
 ### Compatibility
 - Verified with OpenClaw 2026.2.12
 - Verified with Memvid CLI 2.0+
 
-## Previous Versions
-
-### v1.2.4
-- **Neural Search Default:** Updated search guidance to use `--mode neural` as default for maximum accuracy
-- **Performance Documentation:** Clarified latency trade-offs (~200ms for neural vs ~8ms for lexical)
-- **Search Mode Policy:** Recommends neural for semantic understanding, lexical only when speed is critical
-
-### v1.2.3
-- **Version Cohesion:** All files synchronized to v1.2.3
-- **Documentation Consistency:** README and SKILL.md now have matching content
-- **Security Improvements:** Generic paths (no hardcoded user directories), install script asks permission
-- **Registry Compliance:** Complete metadata (env vars, credentials, warnings) for ClawHub transparency
-- **Privacy Documentation:** Comprehensive Security & Privacy Notice explaining data capture scope
-- **Role Tagging:** Distinguishes user, assistant, agent:*, system, and tool messages
-- **Full Context:** Captures sub-agent chatter, tool results, background processes
-- **Three Storage Modes:** API mode (single file), Free mode (50MB), Sharding mode (monthly rotation)
-- **Semantic Search:** Ask "What did the researcher agent find?" or "What did I say about X?"
+---
 
 ## Quick Install (Choose Your Mode)
 
@@ -90,7 +80,7 @@ export MEMVID_MODE="single"
 # 2. Install
 npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
-cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
 
 # 3. Create unified memory file
 memvid create ~/memory.mv2
@@ -115,7 +105,7 @@ memvid ask memory.mv2 "Show me all the Python scripts I asked for"
 # 1. Install (no API key needed)
 npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
-cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
 export MEMVID_MODE="single"
 
 # 2. Create memory file
@@ -131,56 +121,47 @@ memvid create ~/memory.mv2
 
 ---
 
-### Option 3: Sharding Mode - More Than 50MB, Free Forever
-**Best for:** Long-term use, staying under free tier  
+### Option 3: Sharding Mode - Free Forever (Our Recommended Free Setup)
+**Best for:** Long-term use, staying under free tier, weekly rotation  
 **Cost:** FREE  
-**Trade-off:** Multi-file search
+**Trade-off:** Multi-file search (but we use weekly rotation for safety)
 
 ```bash
 # 1. Install (no API key needed)
 npm install -g memvid
 git clone https://github.com/stackBlock/openclaw-memvid-logger.git
-cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/
-export MEMVID_MODE="monthly"  # This is the default
+cp -r openclaw-memvid-logger ~/.openclaw/workspace/skills/unified-logger
+export MEMVID_MODE="weekly"  # Weekly rotation (recommended over monthly)
 
-# 2. Start OpenClaw - auto-creates monthly files
+# 2. Start OpenClaw - auto-creates weekly files with embeddings
 ```
 
 **How it works:**
-- `memory_2026-02.mv2` (February)
-- `memory_2026-03.mv2` (March - auto-created)
-- Each file stays under 50MB
+- `memory_2026-W09.mv2` (Week 9 - Feb 24-Mar 2)
+- `memory_2026-W10.mv2` (Week 10 - Mar 3-9, auto-created)
+- Each file stays well under 50MB
+- **Embeddings enabled** - Full neural search on all conversations
 
-**⚠️ Sharding Search Differences:**
+**Why weekly over monthly:**
+- Monthly files can hit 50MB limit
+- Weekly files typically use only 10-20MB
+- Safer margin for free tier
+- Still easy to search (just 52 files per year vs 12)
 
-Single-file search (API/Free modes):
+**Search:**
 ```bash
-# One search gets everything
-memvid ask memory.mv2 "What car did I decide to buy?"
-# Returns: Results from ALL conversations across ALL time
-```
+# Current week
+memvid ask memory_2026-W09.mv2 "recent discussions" --mode sem
 
-Sharding search (requires multiple queries):
-```bash
-# Must search each month separately
-memvid ask memory_2026-02.mv2 "car decision"  # Recent
-memvid ask memory_2026-01.mv2 "car decision"  # January
+# Specific week
+memvid ask memory_2026-W08.mv2 "last week's conversations" --mode sem
 
-# Or use a wrapper script to search all files
-for file in memory_*.mv2; do
+# Search all weeks
+for file in memory_2026-W*.mv2; do
     echo "=== $file ==="
-    memvid ask "$file" "car decision" 2>/dev/null | head -5
+    memvid ask "$file" "your query" --mode sem 2>/dev/null | head -5
 done
-
-# You must know which month the conversation happened
-# No cross-month context - "compare this month to last month" won't work
 ```
-
-**Why sharding is harder:**
-- Can't ask "what did we discuss in the past 3 months?" in one query
-- No unified timeline across months
-- Must remember which month you talked about what
-- No cross-file semantic comparison
 
 ---
 
@@ -204,6 +185,8 @@ done
 - ✅ Tool executions (bash commands, browser actions, file edits)
 - ✅ Background processes (cron jobs, heartbeats, scheduled tasks)
 - ✅ System events (config changes, restarts, errors)
+
+---
 
 ## Architecture
 
@@ -233,80 +216,43 @@ done
  grep/jq       memvid ask/find
 ```
 
+---
+
 ## Usage Examples
 
-### Natural Language Search
+### Natural Language Search (Neural Mode)
 
 ```bash
 # What did you say about...?
-memvid ask memory_2026-02.mv2 "What was your recommendation about the Mercedes vs Tesla?"
+memvid ask memory_2026-W09.mv2 "What was your recommendation about the Mercedes?" --mode sem
 
 # What did I ask for...?
-memvid ask memory_2026-02.mv2 "What Python scripts did I request last week?"
+memvid ask memory_2026-W09.mv2 "What Python scripts did I request?" --mode sem
 
 # What did agents do...?
-memvid ask memory_2026-02.mv2 "What did the researcher agent find about options trading?"
+memvid ask memory_2026-W09.mv2 "What did the researcher agent find?" --mode sem
 
 # System events...?
-memvid ask memory_2026-02.mv2 "When did the PowerSchool grades cron job run?"
+memvid ask memory_2026-W09.mv2 "When did the PowerSchool cron job run?" --mode sem
 ```
 
 ### Keyword Search
 
 ```bash
 # Find specific terms
-memvid find memory_2026-02.mv2 --query "Mercedes"
+memvid find memory_2026-W09.mv2 --query "Mercedes" --mode sem
 
 # With filters
-memvid find memory_2026-02.mv2 --query "script" --tag agent:coder
+memvid find memory_2026-W09.mv2 --query "script" --tag agent:coder --mode sem
 ```
 
 ### Temporal Queries
 
 ```bash
-memvid when memory_2026-02.mv2 "yesterday"
-memvid when memory_2026-02.mv2 "last Tuesday"
-memvid when memory_2026-02.mv2 "3 days ago"
+memvid when memory_2026-W09.mv2 "yesterday"
+memvid when memory_2026-W09.mv2 "last Tuesday"
+memvid when memory_2026-W09.mv2 "3 days ago"
 ```
-
-## ⚡ Search Performance Guide
-
-Memvid has three search modes. **This skill uses `--mode neural` by default for maximum accuracy:**
-
-### Default: Neural Search (Recommended)
-```bash
-# Always use neural for semantic understanding and context
-memvid ask memory.mv2 "What supplements did Dr. Sinclair recommend?" --mode neural
-memvid ask memory.mv2 "What did we discuss about BadjAI?" --mode neural
-memvid ask memory.mv2 "Show me the Python scripts I requested" --mode neural
-```
-**Speed:** ~200ms | **Best for:** Semantic understanding, context, synonyms, conceptual relationships
-
-### Alternative Modes (Use When Explicitly Requested)
-
-**Mode 1: Lexical Search (Fastest)**
-```bash
-# Use only for exact keyword matching when speed is critical
-memvid find memory.mv2 --mode lex --query "metformin"
-```
-**Speed:** ~8ms | **Use when:** Exact word matching needed, latency is critical
-
-**Mode 2: Hybrid Search (Balanced)**
-```bash
-# Combines lexical + neural
-memvid find memory.mv2 --mode hybrid --query "diabetes medications"
-```
-**Speed:** ~300-500ms | **Use when:** You want both exact matches and semantic similarity
-
-### Why Neural as Default?
-
-| Mode | Speed | Accuracy | Use Case |
-|------|-------|----------|----------|
-| `neural` | ~200ms | **Highest** | **Default - semantic understanding** |
-| `lex` | ~8ms | Keyword only | Speed-critical exact matches |
-| `hybrid` | ~300-500ms | High | Balanced approach |
-
-**The ~200ms trade-off is worth it:** Neural mode understands context, handles paraphrases, and finds conceptually related information that lexical search misses entirely.
 
 ### JSONL Backup
 
@@ -321,6 +267,8 @@ jq 'select(.role_tag == "user" and .content | contains("Python"))' conversation_
 jq 'select(.timestamp >= "2026-02-01" and .timestamp < "2026-03-01")' conversation_log.jsonl
 ```
 
+---
+
 ## Configuration
 
 ### Environment Variables
@@ -328,30 +276,30 @@ jq 'select(.timestamp >= "2026-02-01" and .timestamp < "2026-03-01")' conversati
 | Variable | Default | Mode | Description |
 |----------|---------|------|-------------|
 | `MEMVID_API_KEY` | (none) | API | Your memvid.com API key |
-| `MEMVID_MODE` | `monthly` | All | `single` or `monthly` |
+| `MEMVID_MODE` | `weekly` | All | `single`, `monthly`, or `weekly` |
 | `JSONL_LOG_PATH` | `~/workspace/conversation_log.jsonl` | All | Backup log file |
 | `MEMVID_PATH` | `~/workspace/memory.mv2` | All | Base path for memory files |
 | `MEMVID_BIN` | `~/.npm-global/bin/memvid` | All | Path to memvid CLI |
 
-### OpenClaw Hooks (Advanced)
+### Setting Environment Variables
 
-Add to `openclaw.json`:
+Add to `/etc/environment` (required for background services):
 
-```json
-{
-  "hooks": {
-    "internal": {
-      "enabled": true,
-      "entries": {
-        "conversation-logger": {
-          "enabled": true,
-          "command": "python3 ~/.openclaw/workspace/skills/unified-logger/tools/log.py"
-        }
-      }
-    }
-  }
-}
+```bash
+# Weekly rotation (recommended for free tier)
+export MEMVID_MODE="weekly"
+export JSONL_LOG_PATH="/home/anthony/.openclaw/workspace/conversation_log.jsonl"
+export MEMVID_PATH="/home/anthony/.openclaw/workspace/memory.mv2"
+export MEMVID_BIN="/home/anthony/.npm-global/bin/memvid"
 ```
+
+Then reload:
+```bash
+source /etc/environment
+# Or restart your session
+```
+
+---
 
 ## Memory File Formats
 
@@ -366,12 +314,14 @@ memory.mv2
 └── [system] events
 ```
 
-### Mode 2: Sharding (Monthly Rotation)
+### Mode 2: Sharding (Weekly Rotation - Recommended)
 ```
-memory_2026-01.mv2  (January conversations)
-memory_2026-02.mv2  (February conversations) ← Current
-memory_2026-03.mv2  (March, auto-created on March 1)
+memory_2026-W09.mv2  (Week 9: Feb 24-Mar 2) ← Current
+memory_2026-W10.mv2  (Week 10: Mar 3-9)
+memory_2026-W11.mv2  (Week 11: Mar 10-16)
 ```
+
+---
 
 ## Troubleshooting
 
@@ -381,17 +331,17 @@ memory_2026-03.mv2  (March, auto-created on March 1)
 mv memory.mv2 memory_archive.mv2
 memvid create memory.mv2
 
-# Option 2: Switch to monthly sharding
-export MEMVID_MODE="monthly"
+# Option 2: Switch to weekly sharding
+export MEMVID_MODE="weekly"
 
 # Option 3: Get API key
 export MEMVID_API_KEY="your_key"  # $59-299/month at memvid.com
 ```
 
 ### "Cannot find memory file" (Sharding Mode)
-Current month's file auto-creates. If missing:
+Current week's file auto-creates. If missing:
 ```bash
-memvid create memory_$(date +%Y-%m).mv2
+memvid create memory_$(date +%Y-W%V).mv2
 ```
 
 ### Missing agent conversations
@@ -403,38 +353,65 @@ Memvid uses semantic search. Be specific:
 - ✅ "What did I say about Mercedes" → Targets [user] frames
 - ✅ "Your recommendation about Mercedes" → Targets [assistant] frames
 
+### Embeddings not working
+Check vector index size:
+```bash
+memvid stats memory_2026-W09.mv2 | grep "Vector index"
+```
+Should show > 8 bytes. If 8 bytes, the `--embedding` flag may not be set.
+
+---
+
 ## Comparing the Three Modes
 
-| Feature | API Mode | Free Mode | Sharding Mode |
-|---------|----------|-----------|---------------|
+| Feature | API Mode | Free Mode | Weekly Sharding |
+|---------|----------|-----------|-----------------|
 | **Cost** | $59-299/mo | FREE | FREE |
-| **Capacity** | 1-25GB+ | 50MB | Unlimited (files) |
-| **Files** | 1 | 1 | Multiple (monthly) |
-| **Unified Search** | ✅ Yes | ✅ Yes | ❌ Per-file only |
-| **Cross-Context Search** | ✅ Full history | ✅ Full history | ❌ Month isolated |
+| **Capacity** | 1GB-25GB+ | 50MB | Unlimited (files) |
+| **Files** | 1 | 1 | Weekly files |
+| **Unified Search** | ✅ Yes | ✅ Yes | ❌ Per-file |
+| **Cross-Context** | ✅ Yes | ✅ Yes | ❌ Week isolated |
+| **Embeddings** | ✅ Yes | ⚠️ Risk of filling | ✅ Yes |
+| **Safety Margin** | N/A | Low (50MB max) | High (new file weekly) |
 | **Best For** | Power users | Testing | Long-term free use |
-| **Complexity** | Simple | Simple | Must track files |
 
-## 💸 The Pricing Gap (AKA Why Sharding Exists)
+---
 
-**The situation:** Memvid's pricing goes from $0 (50MB) straight to $59/month (25GB).  
-**The problem:** That's like buying a Ferrari when you just need a Honda Civic for your commute.
+## Real-World Usage (Our Setup)
 
-**What we're doing about it:**  
-I reached out. While they consider it, Sharding Mode exists so you don't have to pay Ferrari prices for Honda Civic usage.
+We use **Weekly Sharding Mode** with **embeddings enabled**:
 
-**You can help:**  
-If you also think $0 → $59 is a bit much, reach out to Memvid at [memvid.com](https://memvid.com) and tell them stackBlock sent you. The more voices, the faster we get that $10-20 middle tier for the rest of us.
+```bash
+# Environment
+export MEMVID_MODE="weekly"
+export MEMVID_PATH="/home/anthony/.openclaw/workspace/memory.mv2"
 
-*Until then: Sharding Mode. Because startups shouldn't have to choose between ramen and memory.* 🍜
+# Results
+# - Week 9 file: memory_2026-W09.mv2
+# - Size: ~5-10 MB per week (well under 50MB)
+# - Embeddings: 80+ KB vector index
+# - Search: Neural semantic search works perfectly
+```
+
+This gives us:
+- ✅ Free tier safe (never hits 50MB)
+- ✅ Full semantic embeddings
+- ✅ Neural search capability
+- ✅ 52 files per year (manageable)
+- ✅ No data loss
+
+---
 
 ## Future Enhancements
 
-- [ ] Auto-archive old months to cold storage
+- [ ] Auto-archive old weeks to cold storage
 - [ ] Web UI for browsing conversations
 - [ ] Cross-file search wrapper script
 - [ ] Export to other formats (Markdown, PDF)
 - [ ] Conversation threading visualization
+- [ ] Compression options for older files
+
+---
 
 ## Support
 
